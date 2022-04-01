@@ -1,0 +1,38 @@
+{
+	"supported type": [
+		"ddim",
+		"dua"
+	],
+	"position": {
+		"shop": 1,
+		"operator": 70,
+		"field": 2,
+		"cluster": "hello"
+	},
+	"devicelist": [
+		{
+			"name": "ddim",
+			"num": 180,
+			"mac": "F1D087414B2B",
+			"type": 1401,
+			"well": "123",
+			"onTime": 60
+		},
+		{
+			"name": "dua",
+			"num": 180,
+			"mac": "F1D087414B2B",
+			"type": 1401,
+			"well": "123",
+			"onTime": 60
+		},
+		{
+			"name": "ddin",
+			"num": 658,
+			"mac": "F1D087414B2B",
+			"type": "0x1401",
+			"well": "123",
+			"onTime": 60
+		}
+	]
+}

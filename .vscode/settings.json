@@ -1,0 +1,13 @@
+{
+	"files.exclude": {
+		"**/.git": true,
+		"*.gitignore": true
+	},
+	"files.associations": {
+		"lwjson.h": "c",
+		"lwjson_opt.h": "c",
+		"stdlib.h": "c",
+		"stdio.h": "c"
+	},
+	"C_Cpp.errorSquiggles": "Disabled"
+}
