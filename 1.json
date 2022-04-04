@@ -7,22 +7,27 @@
 		"shop": 1,
 		"operator": 70,
 		"field": 2,
-		"cluster": "hello"
+		"cluster": "surgut"
 	},
 	"devicelist": [
 		{
 			"name": "ddim",
 			"num": 180,
-			"mac": "F1D087414B2B",
-			"type": 1401,
-			"well": "123",
-			"onTime": 60
+			"mac": "F1:D0:87:41:4B:2B",
+			"well": "test",
+			"onTime": 60,
+			"param": {
+				"period": 10,
+				"apertur": 0,
+				"travel": 4000,
+				"pump": 0,
+				"rod": 32
+			}
 		},
 		{
 			"name": "dua",
 			"num": 180,
-			"mac": "F1D087414B2B",
-			"type": 1401,
+			"mac": "F1:D0:87:41:4B:2B",
 			"well": "123",
 			"onTime": 60
 		},
@@ -30,7 +35,6 @@
 			"name": "ddin",
 			"num": 658,
 			"mac": "F1D087414B2B",
-			"type": "0x1401",
 			"well": "123",
 			"onTime": 60
 		}

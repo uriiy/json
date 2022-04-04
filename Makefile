@@ -17,6 +17,7 @@ INC += \
 
 DEFS += \
 	-DLWJSON_IGNORE_USER_OPTS \
+	-D_DEBUG \
 
 CFLAGS += $(INC) ${DEFS}
 
