@@ -9,9 +9,15 @@ static lwjson_t lwjson;
 
 position_t m_position;
 devices_t m_devices[DEVICES];
+param_dua_t m_param_dua[DEVICES];
+param_ddim_t m_param_ddim[DEVICES];
 
 FILE *f;
-
+/**
+ * @brief печать типа токена
+ *
+ * @param tkn указатель на токен
+ */
 void print_type(const lwjson_token_t *tkn)
 {
 	switch (tkn->type)
@@ -43,6 +49,11 @@ void print_type(const lwjson_token_t *tkn)
 	}
 }
 
+/**
+ * @brief печать значения токена
+ *
+ * @param tkn указатель на токен
+ */
 void print_value(const lwjson_token_t *tkn)
 {
 	switch (tkn->type)
@@ -61,6 +72,94 @@ void print_value(const lwjson_token_t *tkn)
 	}
 }
 
+/**
+ * @brief поиск дочернего токена и присвоение его значения int
+ *
+ * @param json указатель на токен
+ * @param path маска поиска
+ * @param param указатель на переменную, куда присваивать найденное значение
+ * @param def значения по умолчанию, если токен не найден
+ * @return find_return_t (FIND_ERROR_NULL_PARAM, FIND_PARAM_TRUE, FIND_PARAM_DEFAULT)
+ */
+find_return_t find_param_int(lwjson_token_t *json, const char *path, uint32_t *param, uint32_t def)
+{
+	if (NULL == json && NULL == path && NULL == param)
+		return FIND_ERROR_NULL_PARAM;
+
+	lwjson_token_t *ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, json, path);
+	if (ttk != NULL)
+	{
+		*param = ttk->u.num_int;
+		return FIND_PARAM_TRUE;
+	}
+	else
+	{
+		*param = def;
+		return FIND_PARAM_DEFAULT;
+	}
+}
+
+/**
+ * @brief поиск дочернего токена и присвоение его значения float
+ *
+ * @param json указатель на токен
+ * @param path маска поиска
+ * @param param указатель на переменную, куда присваивать найденное значение
+ * @param def значения по умолчанию, если токен не найден
+ * @return find_return_t (FIND_ERROR_NULL_PARAM, FIND_PARAM_TRUE, FIND_PARAM_DEFAULT)
+ */
+find_return_t find_param_float(lwjson_token_t *json, const char *path, uint32_t *param, uint32_t def)
+{
+	if (NULL == json && NULL == path && NULL == param)
+		return FIND_ERROR_NULL_PARAM;
+
+	lwjson_token_t *ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, json, path);
+	if (ttk != NULL)
+	{
+		*param = ttk->u.num_real;
+		return FIND_PARAM_TRUE;
+	}
+	else
+	{
+		*param = def;
+		return FIND_PARAM_DEFAULT;
+	}
+}
+
+/**
+ * @brief поиск дочернего токена и присвоение его значения string
+ *
+ * @param json указатель на токен
+ * @param path маска поиска
+ * @param param указатель на строку, куда присваивать найденное значение
+ * @param len_param размер строки
+ * @param def значение по умолчанию, если токен не найден
+ * @param len_def размер значения по умолчанию
+ * @return find_return_t (FIND_ERROR_NULL_PARAM, FIND_PARAM_TRUE, FIND_PARAM_DEFAULT)
+ */
+find_return_t find_param_string(lwjson_token_t *json, const char *path, uint32_t *param, size_t len_param, uint32_t *def, size_t len_def)
+{
+	if (NULL == json && NULL == path && NULL == param)
+		return FIND_ERROR_NULL_PARAM;
+
+	lwjson_token_t *ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, json, path);
+	if (ttk != NULL)
+	{
+		lwjson_string_cpy_n(ttk, (uint8_t *)param, len_param);
+		return FIND_PARAM_TRUE;
+	}
+	else
+	{
+		memcpy(param, def, len_def);
+		return FIND_PARAM_DEFAULT;
+	}
+}
+
+/**
+ * @brief положение модема
+ *
+ * @param json указатель на токен
+ */
 void get_position(lwjson_token_t *json)
 {
 	lwjson_token_t *ttk;
@@ -68,50 +167,169 @@ void get_position(lwjson_token_t *json)
 	if (json == NULL)
 		return;
 
+	find_param_int(json, "shop", (uint32_t *)&m_position.shop, SHOP_DEFAULT);
+	find_param_int(json, "operator", (uint32_t *)&m_position.oper, OPERATOR_DEFAULT);
+	find_param_int(json, "field", (uint32_t *)&m_position.field, FIELD_DEFAULT);
+	find_param_string(json, "cluster", (uint32_t *)&m_position.cluster, sizeof(m_position.cluster),
+							(uint32_t *)CLUSTER_DEFAULT, sizeof(CLUSTER_DEFAULT));
+
 #ifdef _DEBUG
 	printf("Print Position struct:\n");
-#endif
-
-	ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, json, "shop");
-	if (ttk != NULL)
-		m_position.Shop = ttk->u.num_int;
-	else
-		m_position.Shop = Shop_default;
-#ifdef _DEBUG
-	printf("#  SHOP: %d\n", m_position.Shop);
-#endif
-
-	ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, json, "operator");
-	if (ttk != NULL)
-		m_position.Operator = ttk->u.num_int;
-	else
-		m_position.Operator = Operator_default;
-#ifdef _DEBUG
-	printf("#  OPERATOR: %d\n", m_position.Operator);
-#endif
-
-	ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, json, "field");
-	if (ttk != NULL)
-		m_position.Field = ttk->u.num_int;
-	else
-		m_position.Field = Field_default;
-#ifdef _DEBUG
-	printf("#  FIELD: %d\n", m_position.Field);
-#endif
-
-	ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, json, "cluster");
-	if (ttk != NULL)
-		lwjson_string_cpy_n(ttk, m_position.Cluster, sizeof(m_position.Cluster));
-	else
-		memcpy(m_position.Cluster, Cluster_default, sizeof(Cluster_default));
-#ifdef _DEBUG
-	printf("#  CLUSTER: %.*s\n", strlen((const char *)m_position.Cluster), m_position.Cluster);
-#endif
-#ifdef _DEBUG
+	printf("#-SHOP: %d\n", m_position.shop);
+	printf("#-OPERATOR: %d\n", m_position.oper);
+	printf("#-FIELD: %d\n", m_position.field);
+	printf("#-CLUSTER: %.*s\n", strlen((const char *)m_position.cluster), m_position.cluster);
 	printf("\n");
 #endif
 }
 
+/**
+ * @brief параметры работы динамографа
+ *
+ * @param json указатель на токен
+ * @param i номер датчика
+ */
+void get_param_ddim(lwjson_token_t *json, uint8_t i)
+{
+	if (json == NULL)
+		return;
+	lwjson_token_t *ttk;
+
+	find_param_int(json, "period", (uint32_t *)&m_param_ddim[i].dyn_period, DYN_PERIOD_DEFAULT);
+	find_param_int(json, "apertur", (uint32_t *)&m_param_ddim[i].dyn_aperture, DYN_APERTURE_DEFAULT);
+	find_param_int(json, "travel", (uint32_t *)&m_param_ddim[i].dyn_travel, DYN_TRAVEL_DEFAULT);
+	find_param_int(json, "pump", (uint32_t *)&m_param_ddim[i].dyn_pu, DYN_PU_DEFAULT);
+	find_param_int(json, "rod", (uint32_t *)&m_param_ddim[i].dyn_rod, DYN_ROD_DEFAULT);
+	m_devices[i].param_device = (uint32_t *)&m_param_ddim[i];
+
+//*********************************************************************
+#ifdef _DEBUG
+	printf("#-PARAM DEVICES:\n");
+	printf("#--PERIOD: %d\n", m_param_ddim[i].dyn_period);
+	printf("#--APERTUR: %d\n", m_param_ddim[i].dyn_aperture);
+	printf("#--TRAVEL: %d\n", m_param_ddim[i].dyn_travel);
+	printf("#--PUMP: %d\n", m_param_ddim[i].dyn_pu);
+	printf("#--ROD: %d\n", m_param_ddim[i].dyn_rod);
+	printf("\n");
+#endif
+}
+
+/**
+ * @brief параметры работы уровнемера
+ *
+ * @param json указатель на токен
+ * @param i номер датчика
+ */
+void get_param_dua(lwjson_token_t *json, uint8_t i)
+{
+	if (json == NULL)
+		return;
+#ifdef _DEBUG
+	printf("#-PARAM DEVICES:\n");
+#endif
+	lwjson_token_t *ttk;
+
+	find_param_int(json, "echotype", (uint32_t *)&m_param_dua[i].echotype, STATIC_ECHO_RESEARCH_TYPE);
+#ifdef _DEBUG
+	printf("#--ECHOTYPE: %d\n", m_param_dua[i].echotype);
+#endif
+
+	ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, json, "auto");
+	if (ttk != NULL)
+	{
+		switch (ttk->type)
+		{
+		case LWJSON_TYPE_TRUE:
+			m_param_dua[i].echomode |= AUTO;
+			break;
+		case LWJSON_TYPE_FALSE:
+			m_param_dua[i].echomode &= ~AUTO;
+			break;
+		default:
+			break;
+		}
+	}
+	else
+		m_param_dua[i].echomode |= AUTO;
+
+	ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, json, "gasout");
+	if (ttk != NULL)
+	{
+		switch (ttk->type)
+		{
+		case LWJSON_TYPE_TRUE:
+			m_param_dua[i].echomode |= INLET;
+			break;
+		case LWJSON_TYPE_FALSE:
+			m_param_dua[i].echomode &= ~INLET;
+			break;
+		default:
+			break;
+		}
+	}
+	else
+		m_param_dua[i].echomode |= INLET;
+
+	ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, json, "addgain");
+	if (ttk != NULL)
+	{
+		switch (ttk->type)
+		{
+		case LWJSON_TYPE_TRUE:
+			m_param_dua[i].echomode |= GAIN;
+			break;
+		case LWJSON_TYPE_FALSE:
+			m_param_dua[i].echomode &= ~GAIN;
+			break;
+		default:
+			break;
+		}
+	}
+	else
+		m_param_dua[i].echomode |= GAIN;
+
+	ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, json, "maxlevel");
+	if (ttk != NULL)
+	{
+		switch (ttk->type)
+		{
+		case LWJSON_TYPE_TRUE:
+			m_param_dua[i].echomode |= LEVEL6000;
+			break;
+		case LWJSON_TYPE_FALSE:
+			m_param_dua[i].echomode &= ~LEVEL6000;
+			break;
+		default:
+			break;
+		}
+	}
+	else
+		m_param_dua[i].echomode |= LEVEL6000;
+
+	ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, json, "durauto");
+	if (ttk != NULL)
+	{
+		switch (ttk->type)
+		{
+		case LWJSON_TYPE_TRUE:
+			m_param_dua[i].echomode |= DUR_AUTO;
+			break;
+		case LWJSON_TYPE_FALSE:
+			m_param_dua[i].echomode &= ~DUR_AUTO;
+			break;
+		default:
+			break;
+		}
+	}
+	else
+		m_param_dua[i].echomode |= DUR_AUTO;
+}
+
+/**
+ * @brief список датчиков
+ *
+ * @param json указатель на токен
+ */
 void get_type_device(lwjson_token_t *json)
 {
 	lwjson_token_t *ttk;
@@ -125,26 +343,14 @@ void get_type_device(lwjson_token_t *json)
 	{
 		if (cild_token == NULL)
 			return;
+
+		find_param_string(cild_token, "name", (uint32_t *)&m_devices[i].name, sizeof(m_devices->name), (uint32_t *)NAME_DEFAULT, sizeof(NAME_DEFAULT));
+		find_param_int(cild_token, "num", (uint32_t *)&m_devices[i].num, NUM_DEFAULT);
+
 #ifdef _DEBUG
 		printf("Print Devices %d:\n", i + 1);
-#endif
-
-		ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, cild_token, "name");
-		if (ttk != NULL)
-			lwjson_string_cpy_n(ttk, m_devices[i].Name, NAME_CHARS);
-		else
-			memcpy(m_devices[i].Name, NAME_default, sizeof(NAME_default));
-#ifdef _DEBUG
-		printf("#  NAME: %.*s \n", strlen((const char *)m_devices[i].Name), m_devices[i].Name);
-#endif
-
-		ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, cild_token, "num");
-		if (ttk != NULL)
-			m_devices[i].Num = ttk->u.num_int;
-		else
-			m_devices[i].Num = NUM_default;
-#ifdef _DEBUG
-		printf("#  NUM: %04d\n", m_devices[i].Num);
+		printf("#-NAME: %.*s \n", strlen((const char *)m_devices[i].name), m_devices[i].name);
+		printf("#-NUM: %04d\n", m_devices[i].num);
 #endif
 
 		ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, cild_token, "mac");
@@ -157,7 +363,7 @@ void get_type_device(lwjson_token_t *json)
 					m_devices[i].mac_addr[k] = strtol((const char *)(ttk->u.str.token_value + k * 3), NULL, 16);
 				}
 #ifdef _DEBUG
-				printf("#  MAC: %X:%X:%X:%X:%X:%X\n",
+				printf("#-MAC: %X:%X:%X:%X:%X:%X\n",
 						 m_devices[i].mac_addr[0],
 						 m_devices[i].mac_addr[1],
 						 m_devices[i].mac_addr[2],
@@ -168,43 +374,36 @@ void get_type_device(lwjson_token_t *json)
 			}
 			else
 			{
-				memset(m_devices[i].mac_addr, 0, sizeof(m_devices[i].mac_addr));
+				memset(m_devices[i].mac_addr, MAC_DEFAULT, sizeof(m_devices[i].mac_addr));
 #ifdef _DEBUG
-				printf("#  MAC: err format\n");
+				printf("#-MAC: err format\n");
 #endif
 			}
 		}
 
-		ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, cild_token, "well");
+		find_param_string(cild_token, "well", (uint32_t *)&m_devices[i].well, sizeof(m_devices->well),
+								(uint32_t *)WELL_DEFAULT, sizeof(WELL_DEFAULT));
+		find_param_int(cild_token, "holepress", (uint32_t *)&m_devices[i].hole_press, HOLE_PRESSURE_DEFAULT);
+		find_param_int(cild_token, "bufpress", (uint32_t *)&m_devices[i].buf_press, BUF_PRESSURE_DEFAULT);
+		find_param_int(cild_token, "linepress", (uint32_t *)&m_devices[i].line_press, LINE_PRESSURE_DEFAULT);
+		find_param_int(cild_token, "ontime", (uint32_t *)&m_devices[i].ontime, ONTIME_DEFAULT);
+
+#ifdef _DEBUG
+		printf("#-WELL: %.*s \n", strlen((const char *)m_devices[i].well), m_devices[i].well);
+		printf("#-HOLE_PRESSURE: %d \n", m_devices[i].hole_press);
+		printf("#-BUF_PRESSURE: %d \n", m_devices[i].buf_press);
+		printf("#-LINE_PRESSURE: %d \n", m_devices[i].line_press);
+		printf("#-ON_TIME: %d \n", m_devices[i].ontime);
+#endif
+
+		ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, cild_token, "param");
 		if (ttk != NULL)
 		{
-			lwjson_string_cpy_n(ttk, m_devices[i].Well, sizeof(m_devices[i].Well));
+			if (0 == memcmp(m_devices[i].name, "dua", 3))
+				get_param_dua(ttk, i);
+			if (0 == memcmp(m_devices[i].name, "ddim", 4))
+				get_param_ddim(ttk, i);
 		}
-		else
-		{
-			memset(m_devices[i].Well, 0, sizeof(m_devices[i].Well));
-		}
-#ifdef _DEBUG
-		printf("#  WELL: %.*s \n", strlen((const char *)m_devices[i].Well), m_devices[i].Well);
-#endif
-// 		ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, cild_token, "type");
-// 		if (ttk != NULL)
-// 		{
-// 			if (6 <= ttk->u.str.token_value_len)
-// 				m_devices[i].Type = strtol(ttk->u.str.token_value, NULL, 0);
-// 			else
-// 			{
-// 				m_devices[i].Type = 0;
-// #ifdef _DEBUG
-// 				printf("#  TYPE: err format\n");
-// #endif
-// 			}
-// 		}
-// 		else
-// 			m_devices[i].Type = 0;
-// #ifdef _DEBUG
-// 		printf("#  TYPE %04X", m_devices[i].Type);
-// #endif
 
 //*********************************************************************
 #ifdef _DEBUG

@@ -4,9 +4,9 @@
 		"dua"
 	],
 	"position": {
-		"shop": 1,
+		"shop": 455,
 		"operator": 70,
-		"field": 2,
+		"field": 22,
 		"cluster": "surgut"
 	},
 	"devicelist": [
@@ -14,29 +14,36 @@
 			"name": "ddim",
 			"num": 180,
 			"mac": "F1:D0:87:41:4B:2B",
-			"well": "test",
-			"onTime": 60,
+			"well": "1test",
+			"ontime": 60,
+			"holepress": 80,
+			"bufpress": 50,
+			"linepress": 40,
 			"param": {
-				"period": 10,
-				"apertur": 0,
+				"period": 10000,
+				"apertur": 1,
 				"travel": 4000,
 				"pump": 0,
-				"rod": 32
+				"rod": 320
 			}
 		},
 		{
 			"name": "dua",
 			"num": 180,
 			"mac": "F1:D0:87:41:4B:2B",
-			"well": "123",
-			"onTime": 60
-		},
-		{
-			"name": "ddin",
-			"num": 658,
-			"mac": "F1D087414B2B",
-			"well": "123",
-			"onTime": 60
+			"well": "2test",
+			"ontime": 60,
+			"holepress": 80,
+			"param": {
+				"echotype": 3,
+				"auto": false,
+				"gasout": true,
+				"addgain": false,
+				"maxlevel": true,
+				"durauto": "0.20",
+				"table": 0,
+				"speed": 341
+			}
 		}
 	]
 }
