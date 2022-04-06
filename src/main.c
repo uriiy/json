@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "main.h"
 
 #include "lwjson/lwjson.h"
@@ -457,6 +458,10 @@ int main(void)
 		lwjson_free(&lwjson);
 	}
 	fclose(f);
+
+	long int t = time(NULL);
+
+	printf("Time: %s\n", ctime(&t));
 
 	while (1)
 	{

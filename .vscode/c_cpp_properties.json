@@ -6,8 +6,8 @@
 				"${workspaceFolder}/inc",
 				"${workspaceFolder}/lwjson/src/include",
 				"${workspaceFolder}/lwjson/src/include/**",
-				"C:/dev/tools/MinGW/include/**",
-				"C:/dev/tools/MinGW/include"
+				"${MINGW_DIR}/include/**",
+				"${MINGW_DIR}/include"
 			],
 			"defines": [
 				"_DEBUG",
