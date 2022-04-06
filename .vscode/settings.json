@@ -7,7 +7,9 @@
 		"lwjson.h": "c",
 		"lwjson_opt.h": "c",
 		"stdlib.h": "c",
-		"stdio.h": "c"
+		"stdio.h": "c",
+		"main.h": "c",
+		"string.h": "c"
 	},
 	"C_Cpp.errorSquiggles": "Disabled"
 }

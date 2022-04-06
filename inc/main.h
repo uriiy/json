@@ -1,5 +1,7 @@
 #include <stdint.h>
 
+#define FILE_JSON "ini.json"
+
 #define CLUSTER_CHARS 6 //размер номера куста
 #define WELL_CHARS 6		//резмер номера скважины
 #define NAME_CHARS 20	//размер именя
@@ -10,14 +12,14 @@
 #define FIELD_DEFAULT 0			 //месторождение
 #define CLUSTER_DEFAULT "0000" //куст
 
-#define NAME_DEFAULT "0000"	  //имя
-#define NUM_DEFAULT 0			  //номер
-#define MAC_DEFAULT 0			  // mac адресс
-#define WELL_DEFAULT 0			  //номер скважины
-#define ONTIME_DEFAULT 0		  //период включения
-#define HOLE_PRESSURE_DEFAULT 0 //затрубное давление
-#define BUF_PRESSURE_DEFAULT 0  //буферное давление
-#define LINE_PRESSURE_DEFAULT 0 //линейное давление
+#define NAME_DEFAULT "0000"				 //имя
+#define NUM_DEFAULT 0						 //номер
+#define MAC_DEFAULT "00:00:00:00:00:00" // mac адресс
+#define WELL_DEFAULT "0"					 //номер скважины
+#define ONTIME_DEFAULT 0					 //период включения
+#define HOLE_PRESSURE_DEFAULT 0			 //затрубное давление
+#define BUF_PRESSURE_DEFAULT 0			 //буферное давление
+#define LINE_PRESSURE_DEFAULT 0			 //линейное давление
 
 #define GEN_PUMP_TYPE 0 //обычный (балансир)
 #define CHN_PUMP_TYPE 1 //цепной
@@ -44,6 +46,9 @@
 #define KVU_ECHO_RESEARCH_TYPE 3		 //КВУ
 #define KPU_ECHO_RESEARCH_TYPE 4		 //КПУ
 
+#define DUA_TABLE_DEFAULT 0	//таблица поправок скорости звука
+#define DUA_SPEED_DEFAULT 341 //скорость звука
+
 #define DEVICES 4 //колличество девайсов в планировщике
 
 typedef enum
@@ -51,6 +56,7 @@ typedef enum
 	FIND_ERROR_NULL_PARAM = 0, //ошибка, переданы нулевые параметры
 	FIND_PARAM_TRUE,				//найдены параметры
 	FIND_PARAM_DEFAULT,			//парамеры не найдены
+	FIND_ERROR_TYPE,				//ошибка, другой тип данных
 } find_return_t;
 
 typedef struct param_ddim

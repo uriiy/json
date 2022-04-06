@@ -4,7 +4,7 @@ BUILD_DIR = build
 
 CC=g++
 CFLAGS=-c -g3
-LDFLAGS=
+LDFLAGS += -static
 SOURCES += \
   src/main.c \
   src/hello.c \
@@ -12,8 +12,8 @@ SOURCES += \
   lwjson/src/lwjson/lwjson_debug.c \
 
 INC += \
-	-Iinc \
-	-Ilwjson/src/include \
+  -Iinc \
+  -Ilwjson/src/include \
 
 DEFS += \
 	-DLWJSON_IGNORE_USER_OPTS \

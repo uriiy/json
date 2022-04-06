@@ -1,10 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "main.h"
 
 #include "lwjson/lwjson.h"
 
-static lwjson_token_t token[50];
+static lwjson_token_t token[200];
 static lwjson_t lwjson;
 
 position_t m_position;
@@ -13,6 +14,7 @@ param_dua_t m_param_dua[DEVICES];
 param_ddim_t m_param_ddim[DEVICES];
 
 FILE *f;
+
 /**
  * @brief печать типа токена
  *
@@ -79,7 +81,7 @@ void print_value(const lwjson_token_t *tkn)
  * @param path маска поиска
  * @param param указатель на переменную, куда присваивать найденное значение
  * @param def значения по умолчанию, если токен не найден
- * @return find_return_t (FIND_ERROR_NULL_PARAM, FIND_PARAM_TRUE, FIND_PARAM_DEFAULT)
+ * @return find_return_t (FIND_ERROR_NULL_PARAM, FIND_PARAM_TRUE, FIND_PARAM_DEFAULT, FIND_ERROR_TYPE)
  */
 find_return_t find_param_int(lwjson_token_t *json, const char *path, uint32_t *param, uint32_t def)
 {
@@ -106,7 +108,7 @@ find_return_t find_param_int(lwjson_token_t *json, const char *path, uint32_t *p
  * @param path маска поиска
  * @param param указатель на переменную, куда присваивать найденное значение
  * @param def значения по умолчанию, если токен не найден
- * @return find_return_t (FIND_ERROR_NULL_PARAM, FIND_PARAM_TRUE, FIND_PARAM_DEFAULT)
+ * @return find_return_t (FIND_ERROR_NULL_PARAM, FIND_PARAM_TRUE, FIND_PARAM_DEFAULT, FIND_ERROR_TYPE)
  */
 find_return_t find_param_float(lwjson_token_t *json, const char *path, uint32_t *param, uint32_t def)
 {
@@ -135,7 +137,7 @@ find_return_t find_param_float(lwjson_token_t *json, const char *path, uint32_t 
  * @param len_param размер строки
  * @param def значение по умолчанию, если токен не найден
  * @param len_def размер значения по умолчанию
- * @return find_return_t (FIND_ERROR_NULL_PARAM, FIND_PARAM_TRUE, FIND_PARAM_DEFAULT)
+ * @return find_return_t (FIND_ERROR_NULL_PARAM, FIND_PARAM_TRUE, FIND_PARAM_DEFAULT, FIND_ERROR_TYPE)
  */
 find_return_t find_param_string(lwjson_token_t *json, const char *path, uint32_t *param, size_t len_param, uint32_t *def, size_t len_def)
 {
@@ -156,7 +158,44 @@ find_return_t find_param_string(lwjson_token_t *json, const char *path, uint32_t
 }
 
 /**
- * @brief положение модема
+ * @brief поиск дочернего токена и присвоение его значения по битовой маске
+ *
+ * @param json указатель на токен
+ * @param path маска поиска
+ * @param param указатель на переменную, куда присваивать найденное значение
+ * @param bit_mask битовая маска
+ * @return find_return_t (FIND_ERROR_NULL_PARAM, FIND_PARAM_TRUE, FIND_PARAM_DEFAULT, FIND_ERROR_TYPE)
+ */
+find_return_t find_param_bool(lwjson_token_t *json, const char *path, uint32_t *param, uint32_t bit_mask)
+{
+	if (NULL == json && NULL == path && NULL == param)
+		return FIND_ERROR_NULL_PARAM;
+
+	lwjson_token_t *ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, json, path);
+	if (ttk != NULL)
+	{
+		switch (ttk->type)
+		{
+		case LWJSON_TYPE_TRUE:
+			*param |= bit_mask;
+			return FIND_PARAM_TRUE;
+		case LWJSON_TYPE_FALSE:
+			*param &= ~bit_mask;
+			return FIND_PARAM_TRUE;
+		default:
+			*param &= ~bit_mask;
+			return FIND_ERROR_TYPE;
+		}
+	}
+	else
+	{
+		*param &= ~bit_mask;
+		return FIND_ERROR_NULL_PARAM;
+	}
+}
+
+/**
+ * @brief парсинг положение модема
  *
  * @param json указатель на токен
  */
@@ -184,7 +223,7 @@ void get_position(lwjson_token_t *json)
 }
 
 /**
- * @brief параметры работы динамографа
+ * @brief парсинг параметры работы динамографа
  *
  * @param json указатель на токен
  * @param i номер датчика
@@ -210,12 +249,11 @@ void get_param_ddim(lwjson_token_t *json, uint8_t i)
 	printf("#--TRAVEL: %d\n", m_param_ddim[i].dyn_travel);
 	printf("#--PUMP: %d\n", m_param_ddim[i].dyn_pu);
 	printf("#--ROD: %d\n", m_param_ddim[i].dyn_rod);
-	printf("\n");
 #endif
 }
 
 /**
- * @brief параметры работы уровнемера
+ * @brief парсинг параметры работы уровнемера
  *
  * @param json указатель на токен
  * @param i номер датчика
@@ -224,105 +262,27 @@ void get_param_dua(lwjson_token_t *json, uint8_t i)
 {
 	if (json == NULL)
 		return;
-#ifdef _DEBUG
-	printf("#-PARAM DEVICES:\n");
-#endif
+
 	lwjson_token_t *ttk;
 
 	find_param_int(json, "echotype", (uint32_t *)&m_param_dua[i].echotype, STATIC_ECHO_RESEARCH_TYPE);
+
+	find_param_bool(json, "auto", (uint32_t *)&m_param_dua[i].echomode, AUTO);
+	find_param_bool(json, "gasout", (uint32_t *)&m_param_dua[i].echomode, INLET);
+	find_param_bool(json, "addgain", (uint32_t *)&m_param_dua[i].echomode, GAIN);
+	find_param_bool(json, "maxlevel", (uint32_t *)&m_param_dua[i].echomode, LEVEL6000);
+	find_param_bool(json, "durauto", (uint32_t *)&m_param_dua[i].echomode, DUR_AUTO);
+
+	find_param_int(json, "table", (uint32_t *)&m_param_dua[i].table, DUA_TABLE_DEFAULT);
+	find_param_int(json, "speed", (uint32_t *)&m_param_dua[i].speed, DUA_SPEED_DEFAULT);
+
 #ifdef _DEBUG
+	printf("#-PARAM DEVICES:\n");
 	printf("#--ECHOTYPE: %d\n", m_param_dua[i].echotype);
+	printf("#--ECHOMODE: %d\n", m_param_dua[i].echomode);
+	printf("#--TABLE: %d\n", m_param_dua[i].table);
+	printf("#--SPEED: %d\n", m_param_dua[i].speed);
 #endif
-
-	ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, json, "auto");
-	if (ttk != NULL)
-	{
-		switch (ttk->type)
-		{
-		case LWJSON_TYPE_TRUE:
-			m_param_dua[i].echomode |= AUTO;
-			break;
-		case LWJSON_TYPE_FALSE:
-			m_param_dua[i].echomode &= ~AUTO;
-			break;
-		default:
-			break;
-		}
-	}
-	else
-		m_param_dua[i].echomode |= AUTO;
-
-	ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, json, "gasout");
-	if (ttk != NULL)
-	{
-		switch (ttk->type)
-		{
-		case LWJSON_TYPE_TRUE:
-			m_param_dua[i].echomode |= INLET;
-			break;
-		case LWJSON_TYPE_FALSE:
-			m_param_dua[i].echomode &= ~INLET;
-			break;
-		default:
-			break;
-		}
-	}
-	else
-		m_param_dua[i].echomode |= INLET;
-
-	ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, json, "addgain");
-	if (ttk != NULL)
-	{
-		switch (ttk->type)
-		{
-		case LWJSON_TYPE_TRUE:
-			m_param_dua[i].echomode |= GAIN;
-			break;
-		case LWJSON_TYPE_FALSE:
-			m_param_dua[i].echomode &= ~GAIN;
-			break;
-		default:
-			break;
-		}
-	}
-	else
-		m_param_dua[i].echomode |= GAIN;
-
-	ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, json, "maxlevel");
-	if (ttk != NULL)
-	{
-		switch (ttk->type)
-		{
-		case LWJSON_TYPE_TRUE:
-			m_param_dua[i].echomode |= LEVEL6000;
-			break;
-		case LWJSON_TYPE_FALSE:
-			m_param_dua[i].echomode &= ~LEVEL6000;
-			break;
-		default:
-			break;
-		}
-	}
-	else
-		m_param_dua[i].echomode |= LEVEL6000;
-
-	ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, json, "durauto");
-	if (ttk != NULL)
-	{
-		switch (ttk->type)
-		{
-		case LWJSON_TYPE_TRUE:
-			m_param_dua[i].echomode |= DUR_AUTO;
-			break;
-		case LWJSON_TYPE_FALSE:
-			m_param_dua[i].echomode &= ~DUR_AUTO;
-			break;
-		default:
-			break;
-		}
-	}
-	else
-		m_param_dua[i].echomode |= DUR_AUTO;
 }
 
 /**
@@ -374,12 +334,14 @@ void get_type_device(lwjson_token_t *json)
 			}
 			else
 			{
-				memset(m_devices[i].mac_addr, MAC_DEFAULT, sizeof(m_devices[i].mac_addr));
+				memcpy(m_devices[i].mac_addr, MAC_DEFAULT, sizeof(MAC_DEFAULT));
 #ifdef _DEBUG
 				printf("#-MAC: err format\n");
 #endif
 			}
 		}
+		else
+			memcpy(m_devices[i].mac_addr, MAC_DEFAULT, sizeof(MAC_DEFAULT));
 
 		find_param_string(cild_token, "well", (uint32_t *)&m_devices[i].well, sizeof(m_devices->well),
 								(uint32_t *)WELL_DEFAULT, sizeof(WELL_DEFAULT));
@@ -412,9 +374,68 @@ void get_type_device(lwjson_token_t *json)
 	}
 }
 
+void file_tamplate(void)
+{
+	f = fopen((const char *)"ini.json", (const char *)"w");
+
+	fprintf(f, "{\n");
+	fprintf(f, "	\"position\": {\n");
+	fprintf(f, "		\"shop\": %d,\n", SHOP_DEFAULT);
+	fprintf(f, "		\"operator\": %d,\n", OPERATOR_DEFAULT);
+	fprintf(f, "		\"field\": %d,\n", FIELD_DEFAULT);
+	fprintf(f, "		\"cluster\": \"%s\"\n", CLUSTER_DEFAULT);
+	fprintf(f, "	},\n");
+	fprintf(f, "	\"devicelist\": [\n");
+	fprintf(f, "		{\n");
+	fprintf(f, "			\"name\": \"ddim\",\n");
+	fprintf(f, "			\"num\": %d,\n", NUM_DEFAULT);
+	fprintf(f, "			\"mac\": \"%s\",\n", MAC_DEFAULT);
+	fprintf(f, "			\"well\": \"%s\",\n", WELL_DEFAULT);
+	fprintf(f, "			\"ontime\": %d,\n", ONTIME_DEFAULT);
+	fprintf(f, "			\"holepress\": %d,\n", HOLE_PRESSURE_DEFAULT);
+	fprintf(f, "			\"bufpress\": %d,\n", BUF_PRESSURE_DEFAULT);
+	fprintf(f, "			\"linepress\": %d,\n", LINE_PRESSURE_DEFAULT);
+	fprintf(f, "			\"param\": {\n");
+	fprintf(f, "				\"period\": %d,\n", DYN_PERIOD_DEFAULT);
+	fprintf(f, "				\"apertur\": %d,\n", DYN_APERTURE_DEFAULT);
+	fprintf(f, "				\"travel\": %d,\n", DYN_TRAVEL_DEFAULT);
+	fprintf(f, "				\"pump\": %d,\n", DYN_PU_DEFAULT);
+	fprintf(f, "				\"rod\": %d\n", DYN_ROD_DEFAULT);
+	fprintf(f, "			}\n");
+	fprintf(f, "		},\n");
+	fprintf(f, "		{\n");
+	fprintf(f, "			\"name\": \"dua\",\n");
+	fprintf(f, "			\"num\": %d,\n", NUM_DEFAULT);
+	fprintf(f, "			\"mac\": \"%s\",\n", MAC_DEFAULT);
+	fprintf(f, "			\"well\": \"%s\",\n", WELL_DEFAULT);
+	fprintf(f, "			\"ontime\": %d,\n", ONTIME_DEFAULT);
+	fprintf(f, "			\"holepress\": %d,\n", HOLE_PRESSURE_DEFAULT);
+	fprintf(f, "			\"bufpress\": %d,\n", BUF_PRESSURE_DEFAULT);
+	fprintf(f, "			\"linepress\": %d,\n", LINE_PRESSURE_DEFAULT);
+	fprintf(f, "			\"param\": {\n");
+	fprintf(f, "				\"echotype\": %d,\n", STATIC_ECHO_RESEARCH_TYPE);
+	fprintf(f, "				\"auto\": true,\n");
+	fprintf(f, "				\"gasout\": false,\n");
+	fprintf(f, "				\"addgain\": false,\n");
+	fprintf(f, "				\"maxlevel\": false,\n");
+	fprintf(f, "				\"durauto\": false,\n");
+	fprintf(f, "				\"table\": %d,\n", DUA_TABLE_DEFAULT);
+	fprintf(f, "				\"speed\": %d\n", DUA_SPEED_DEFAULT);
+	fprintf(f, "			}\n");
+	fprintf(f, "		}\n");
+	fprintf(f, "	]\n");
+	fprintf(f, "}");
+	fclose(f);
+}
+
 int main(void)
 {
-	if ((f = fopen((const char *)"C:/dev/projects/test/1.json", (const char *)"rb")) == NULL)
+	if ((f = fopen((const char *)"./ini.json", (const char *)"rb")) == NULL)
+	{
+		printf("Cannot open file.\n");
+		file_tamplate();
+	}
+	if ((f = fopen((const char *)"./ini.json", (const char *)"rb")) == NULL)
 	{
 		printf("Cannot open file.\n");
 		exit(1);
@@ -436,4 +457,12 @@ int main(void)
 		lwjson_free(&lwjson);
 	}
 	fclose(f);
+
+	while (1)
+	{
+		if ('\n' == getc(stdin))
+		{
+			break;
+		}
+	}
 }
