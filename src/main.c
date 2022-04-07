@@ -90,7 +90,7 @@ find_return_t find_param_int(lwjson_token_t *json, const char *path, uint32_t *p
 		return FIND_ERROR_NULL_PARAM;
 
 	lwjson_token_t *ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, json, path);
-	if (ttk != NULL)
+	if (NULL != ttk && LWJSON_TYPE_NUM_INT == ttk->type)
 	{
 		*param = ttk->u.num_int;
 		return FIND_PARAM_TRUE;
@@ -117,7 +117,7 @@ find_return_t find_param_float(lwjson_token_t *json, const char *path, uint32_t 
 		return FIND_ERROR_NULL_PARAM;
 
 	lwjson_token_t *ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, json, path);
-	if (ttk != NULL)
+	if (NULL != ttk && LWJSON_TYPE_NUM_REAL == ttk->type)
 	{
 		*param = ttk->u.num_real;
 		return FIND_PARAM_TRUE;
@@ -146,7 +146,7 @@ find_return_t find_param_string(lwjson_token_t *json, const char *path, uint32_t
 		return FIND_ERROR_NULL_PARAM;
 
 	lwjson_token_t *ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, json, path);
-	if (ttk != NULL)
+	if (NULL != ttk && LWJSON_TYPE_STRING == ttk->type)
 	{
 		lwjson_string_cpy_n(ttk, (uint8_t *)param, len_param);
 		return FIND_PARAM_TRUE;
@@ -173,7 +173,7 @@ find_return_t find_param_bool(lwjson_token_t *json, const char *path, uint32_t *
 		return FIND_ERROR_NULL_PARAM;
 
 	lwjson_token_t *ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, json, path);
-	if (ttk != NULL)
+	if (NULL == ttk)
 	{
 		switch (ttk->type)
 		{
@@ -204,7 +204,7 @@ void get_position(lwjson_token_t *json)
 {
 	lwjson_token_t *ttk;
 
-	if (json == NULL)
+	if (NULL == json)
 		return;
 
 	find_param_int(json, "shop", (uint32_t *)&m_position.shop, SHOP_DEFAULT);
@@ -231,7 +231,7 @@ void get_position(lwjson_token_t *json)
  */
 void get_param_ddim(lwjson_token_t *json, uint8_t i)
 {
-	if (json == NULL)
+	if (NULL == json)
 		return;
 	lwjson_token_t *ttk;
 
@@ -261,7 +261,7 @@ void get_param_ddim(lwjson_token_t *json, uint8_t i)
  */
 void get_param_dua(lwjson_token_t *json, uint8_t i)
 {
-	if (json == NULL)
+	if (NULL == json)
 		return;
 
 	lwjson_token_t *ttk;
@@ -295,14 +295,14 @@ void get_type_device(lwjson_token_t *json)
 {
 	lwjson_token_t *ttk;
 
-	if (json == NULL)
+	if (NULL == json)
 		return;
 
 	lwjson_token_t *cild_token = (lwjson_token_t *)lwjson_get_first_child(json);
 
 	for (uint8_t i; i < DEVICES; i++, cild_token = cild_token->next)
 	{
-		if (cild_token == NULL)
+		if (NULL == cild_token)
 			return;
 
 		find_param_string(cild_token, "name", (uint32_t *)&m_devices[i].name, sizeof(m_devices->name), (uint32_t *)NAME_DEFAULT, sizeof(NAME_DEFAULT));
@@ -315,7 +315,7 @@ void get_type_device(lwjson_token_t *json)
 #endif
 
 		ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, cild_token, "mac");
-		if (ttk != NULL)
+		if (NULL != ttk)
 		{
 			if (17 <= ttk->u.str.token_value_len)
 			{
@@ -360,7 +360,7 @@ void get_type_device(lwjson_token_t *json)
 #endif
 
 		ttk = (lwjson_token_t *)lwjson_find_ex(&lwjson, cild_token, "param");
-		if (ttk != NULL)
+		if (NULL != ttk)
 		{
 			if (0 == memcmp(m_devices[i].name, "dua", 3))
 				get_param_dua(ttk, i);
