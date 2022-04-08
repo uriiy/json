@@ -1,4 +1,4 @@
-TARGET = hello
+TARGET = Srevice
 
 BUILD_DIR = build
 
@@ -25,20 +25,29 @@ DEFS += \
 
 CFLAGS += $(INC) ${DEFS}
 
-OBJECTS=$(SOURC:.c=.o)
-ICON=$(RESURSES:.rc=.o)
+OBJECTS=$(addprefix $(BUILD_DIR)/, $(notdir $(SOURC:.c=.o)))
+vpath %.c $(sort $(dir $(SOURC)))
+ICON=$(addprefix $(BUILD_DIR)/, $(notdir $(RESURSES:.rc=.o)))
+vpath %.rc $(sort $(dir $(SOURC)))
 
+all: $(TARGET)
 
-all: $(SOURC) $(TARGET)
+$(BUILD_DIR):
+	mkdir "$(BUILD_DIR)"
 
-$(TARGET): $(OBJECTS) $(ICON)
+$(TARGET): $(OBJECTS) $(ICON) Makefile
 	$(CC) $(LDFLAGS) $(OBJECTS) $(ICON) -o $@
 
-%.o: %.cpp
+$(BUILD_DIR)/%.o: %.cpp Makefile | $(BUILD_DIR)
 	$(CC) $(CFLAGS) $< -o $@
 
-%.o: %.c
+$(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR)
 	$(CC) $(CFLAGS) $< -o $@
 
-%.o:%.rc
+$(BUILD_DIR)/%.o:%.rc Makefile | $(BUILD_DIR)
 	$(RES) $< -o $@
+
+clear:
+	rm -fr "$(BUILD_DIR)"
+	rm -rf "$(TARGET)"
+	rm -rf "ini.json"
