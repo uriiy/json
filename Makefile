@@ -51,4 +51,5 @@ $(BUILD_DIR)/%.o:%.rc Makefile | $(BUILD_DIR)
 clear:
 	rm -fr "$(BUILD_DIR)"
 	rm -rf "$(TARGET)"
-	rm -rf "ini.json"
+	rm -rf "schedul.txt"
+	rm -fr "initime"

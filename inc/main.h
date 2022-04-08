@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-#define FILE_JSON "ini.json"
+#define FILE_JSON "schedul.txt"
 
 #define CLUSTER_CHARS 6 //размер номера куста
 #define WELL_CHARS 6		//резмер номера скважины

@@ -380,7 +380,7 @@ void get_type_device(lwjson_token_t *json)
 
 void file_tamplate(void)
 {
-	f = fopen((const char *)"ini.json", (const char *)"w");
+	f = fopen((const char *)FILE_JSON, (const char *)"w");
 
 	fprintf(f, "{\n");
 	fprintf(f, "	\"position\": {\n");
@@ -479,12 +479,12 @@ static uint32_t CountRTC(TIME *pTime)
 
 int main(void)
 {
-	if ((f = fopen((const char *)"./ini.json", (const char *)"rb")) == NULL)
+	if ((f = fopen((const char *)FILE_JSON, (const char *)"rb")) == NULL)
 	{
 		printf("Cannot open file.\n");
 		file_tamplate();
 	}
-	if ((f = fopen((const char *)"./ini.json", (const char *)"rb")) == NULL)
+	if ((f = fopen((const char *)FILE_JSON, (const char *)"rb")) == NULL)
 	{
 		printf("Cannot open file.\n");
 		exit(1);
