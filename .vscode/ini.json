@@ -1,0 +1,47 @@
+{
+	"position": {
+		"shop": 0,
+		"operator": 0,
+		"field": 0,
+		"cluster": "0000"
+	},
+	"devicelist": [
+		{
+			"name": "ddim",
+			"num": 0,
+			"mac": "00:00:00:00:00:00",
+			"well": "0",
+			"ontime": 0,
+			"holepress": 0,
+			"bufpress": 0,
+			"linepress": 0,
+			"param": {
+				"period": 10000,
+				"apertur": 1,
+				"travel": 4000,
+				"pump": 0,
+				"rod": 320
+			}
+		},
+		{
+			"name": "dua",
+			"num": 0,
+			"mac": "00:00:00:00:00:00",
+			"well": "0",
+			"ontime": 0,
+			"holepress": 0,
+			"bufpress": 0,
+			"linepress": 0,
+			"param": {
+				"echotype": 1,
+				"auto": true,
+				"gasout": false,
+				"addgain": false,
+				"maxlevel": false,
+				"durauto": false,
+				"table": 0,
+				"speed": 341
+			}
+		}
+	]
+}

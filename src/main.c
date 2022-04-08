@@ -14,6 +14,9 @@ devices_t m_devices[DEVICES];
 param_dua_t m_param_dua[DEVICES];
 param_ddim_t m_param_ddim[DEVICES];
 
+TIME m_time;
+INI_TIME_V1_0 m_ini_time;
+
 FILE *f;
 
 /**
@@ -429,6 +432,51 @@ void file_tamplate(void)
 	fclose(f);
 }
 
+static uint8_t IsLeapYear(uint8_t year)
+{
+	return (((year % 4 == 0) && (year % 100 != 0)) /* || (year % 400 == 0)*/) ? 1 : 0;
+}
+void Time_Correct(TIME *pTime)
+{
+	if (pTime->month == 0)
+		pTime->month = 1;
+	else
+	{
+		if (pTime->month > 12)
+			pTime->month = 12;
+	}
+
+	if (pTime->day == 0)
+		pTime->day = 1;
+	else
+	{
+		int ThisMonthDays = MonthDays[pTime->month - 1];
+		if (pTime->month == 2 && IsLeapYear(pTime->year))
+			ThisMonthDays += 1; //фефраль в високосный год
+		if (pTime->day > ThisMonthDays)
+			pTime->day = ThisMonthDays;
+	}
+
+	if (pTime->hour > 23)
+		pTime->hour = 23;
+	if (pTime->min > 59)
+		pTime->min = 59;
+	if (pTime->sec > 59)
+		pTime->sec = 59;
+}
+
+static uint32_t CountRTC(TIME *pTime)
+{
+	uint32_t days = pTime->day - 1 + (pTime->year - 1) * 365 + (pTime->year - 1) / 4 - (pTime->year - 1) / 100; // + (pTime->year - 1)/400;
+	for (int month = 1; month < pTime->month; month++)
+	{
+		days += MonthDays[month - 1];
+		if (month == 2 && IsLeapYear(pTime->year))
+			days += 1;
+	}
+	return days * 86400 + pTime->hour * 3600 + pTime->min * 60 + pTime->sec;
+}
+
 int main(void)
 {
 	if ((f = fopen((const char *)"./ini.json", (const char *)"rb")) == NULL)
@@ -459,7 +507,30 @@ int main(void)
 	}
 	fclose(f);
 
-	long int t = time(NULL);
+	struct tm local_time, utc_time;
+
+	time_t t = time(NULL);
+	local_time = *localtime(&t);
+	utc_time = *gmtime(&t);
+
+	m_time.day = local_time.tm_mday;
+	m_time.hour = local_time.tm_hour;
+	m_time.min = local_time.tm_min;
+	m_time.month = local_time.tm_mon + 1;
+	m_time.sec = local_time.tm_sec;
+	m_time.year = local_time.tm_year - 100;
+
+	Time_Correct(&m_time);
+
+	m_ini_time.Ver = 0x0100;
+	m_ini_time.Time = CountRTC(&m_time);
+	m_ini_time.TimeZone = local_time.tm_hour - utc_time.tm_hour;
+
+	m_ini_time.crc = usMBCRC16((uint8_t *)&m_ini_time, sizeof(m_ini_time) - sizeof(m_ini_time.crc));
+
+	f = fopen((const char *)"initime", (const char *)"w");
+	fwrite((const void *)&m_ini_time, sizeof(m_ini_time), 1, f);
+	fclose(f);
 
 	printf("Time: %s\n", ctime(&t));
 

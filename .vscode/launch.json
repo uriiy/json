@@ -8,7 +8,7 @@
 			"name": "(gdb) Запустить",
 			"type": "cppdbg",
 			"request": "launch",
-			"program": "${workspaceFolder}/hello.exe",
+			"program": "${workspaceFolder}/Srevice.exe",
 			"args": [],
 			"stopAtEntry": false,
 			"cwd": "${fileDirname}",

@@ -97,5 +97,28 @@ typedef struct position
 	uint8_t cluster[CLUSTER_CHARS]; //номер куста
 } position_t;
 
+#pragma pack(1)
+typedef struct
+{
+	uint16_t Ver;
+	uint32_t Time;
+	int16_t TimeZone;
+	uint16_t crc;
+} INI_TIME_V1_0;
+
+#pragma pack(1)
+typedef struct
+{
+	uint8_t hour;
+	uint8_t min;
+	uint8_t sec;
+	uint8_t day;
+	uint8_t month;
+	uint8_t year;
+} TIME;
+
+const uint8_t MonthDays[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+
 void print_hello();
 uint32_t strtoint(char *str);
+uint16_t usMBCRC16(uint8_t *pucFrame, uint32_t usLen);

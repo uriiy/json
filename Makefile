@@ -9,6 +9,7 @@ LDFLAGS += -static
 SOURC += \
 	src/main.c \
 	src/hello.c \
+	src/modbusCrc.c \
 	lwjson/src/lwjson/lwjson.c \
 	lwjson/src/lwjson/lwjson_debug.c \
 
