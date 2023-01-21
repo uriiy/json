@@ -553,7 +553,7 @@ uint32_t bw;
 FILE *fil;
 FILE *fil_in;
 
-// #define FNAME_ENABLE 1
+#define FNAME_ENABLE 1
 
 static void gzip(char *arg)
 {
@@ -600,50 +600,33 @@ static void gzip(char *arg)
 
 	fil = fopen(destination_name, (const char *)"wb");
 
-	// if (fres == FR_OK)
-	{
+	uint32_t mtime = 720489600; // 	Initial release GZIP 31 October 1992;
 
-		// Create File Header
-		uint32_t mtime = 720489600; // 	Initial release GZIP 31 October 1992;
-
-		fputc(0x1f, fil); //	Magic Number
-		fputc(0x8b, fil); //	Magic Number
-		fputc(0x08, fil); //	Compression Method
+	fputc(0x1f, fil); //	Magic Number
+	fputc(0x8b, fil); //	Magic Number
+	fputc(0x08, fil); //	Compression Method
 #ifdef FNAME_ENABLE
-		fputc(0x08, fil); //	File Flags  FNAME : 0x08 ->	The file contains an original file name string
+	fputc(0x08, fil); //	File Flags  FNAME : 0x08 ->	The file contains an original file name string
 #else
-		fputc(0x00, fil); //	File Flags
+	fputc(0x00, fil); //	File Flags
 #endif
-		// fres = fwrite(&fil, &mtime, sizeof(mtime), &bw); // Set File timestamp
-		fwrite(&mtime, sizeof(mtime), 1, fil);
-		fputc(0x04, fil); //	XFL
-		fputc(0x03, fil); //	OS
+	fwrite(&mtime, sizeof(mtime), 1, fil);
+	fputc(0x04, fil); //	XFL
+	fputc(0x03, fil); //	OS
 
 #ifdef FNAME_ENABLE
-		// Create Payload
-		// const char *orginal_name = "demo.txt";
-		const char *orginal_name = FILE_JSON;
-		// fres = fwrite(&fil, orginal_name, strlen(orginal_name), &bw);
-		fwrite(orginal_name, strlen(orginal_name), 1, fil);
-		fputc(0x00, fil); //	EOF
+	// Create Payload
+	const char *orginal_name = "demo.txt";
+	fwrite(orginal_name, strlen(orginal_name), 1, fil);
+	fputc(0x00, fil); //	EOF
 #endif
 
-		// fres = fwrite(&fil, comp.outbuf, comp.outlen, &bw);
-		fwrite(comp.outbuf, comp.outlen, 1, fil);
-		// uint32_t crc = ~uzlib_crc32(data, len, ~0); // Calculate CRC
-		uint32_t crc = ~uzlib_crc32(source, len, ~0); // Calculate CRC
+	fwrite(comp.outbuf, comp.outlen, 1, fil);
+	uint32_t crc = ~uzlib_crc32(source, len, ~0); // Calculate CRC
 
-		// fres = fwrite(&fil, &crc, sizeof(crc), &bw); // Add CRC
-		fwrite(&crc, sizeof(crc), 1, fil);
-		// fres = fwrite(&fil, &len, sizeof(len), &bw); // Add original length
-		fwrite(&len, sizeof(len), 1, fil);
-		// fwrite(&fil_in->_cnt, sizeof(fil_in->_cnt), 1, fil);
+	fwrite(&crc, sizeof(crc), 1, fil);
+	fwrite(&len, sizeof(len), 1, fil);
 
-		// Close file
-		// file_size = fsize(&fil);
-		fclose(fil);
-		// fclose(fil_in);
-	}
-
+	fclose(fil);
 	printf("\n Successfully generated!  %s ( %u bytes ) \n", destination_name, file_size);
 }
