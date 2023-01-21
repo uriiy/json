@@ -6,7 +6,7 @@
 
 #include "lwjson/lwjson.h"
 
-static void gzip(void);
+static void gzip(char *arg);
 
 static lwjson_token_t token[200];
 static lwjson_t lwjson;
@@ -479,64 +479,64 @@ static uint32_t CountRTC(TIME *pTime)
 	return days * 86400 + pTime->hour * 3600 + pTime->min * 60 + pTime->sec;
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
-	if ((f = fopen((const char *)FILE_JSON, (const char *)"rb")) == NULL)
-	{
-		printf("Cannot open file.\n");
-		file_tamplate();
-	}
-	if ((f = fopen((const char *)FILE_JSON, (const char *)"rb")) == NULL)
-	{
-		printf("Cannot open file.\n");
-		exit(1);
-	}
+	// if ((f = fopen((const char *)FILE_JSON, (const char *)"rb")) == NULL)
+	// {
+	// 	printf("Cannot open file.\n");
+	// 	file_tamplate();
+	// }
+	// if ((f = fopen((const char *)FILE_JSON, (const char *)"rb")) == NULL)
+	// {
+	// 	printf("Cannot open file.\n");
+	// 	exit(1);
+	// }
 
-	getc(f);
-	lwjson_init(&lwjson, token, LWJSON_ARRAYSIZE(token));
+	// getc(f);
+	// lwjson_init(&lwjson, token, LWJSON_ARRAYSIZE(token));
 
-	if (lwjson_parse(&lwjson, (const char *)f->_base) == lwjsonOK)
-	{
-		lwjson_token_t *t;
-		printf("JSON parsed..\n\n");
+	// if (lwjson_parse(&lwjson, (const char *)f->_base) == lwjsonOK)
+	// {
+	// 	lwjson_token_t *t;
+	// 	printf("JSON parsed..\n\n");
 
-		t = (lwjson_token_t *)lwjson_find(&lwjson, "position");
-		get_position(t);
-		t = (lwjson_token_t *)lwjson_find(&lwjson, "devicelist");
-		get_type_device(t);
+	// 	t = (lwjson_token_t *)lwjson_find(&lwjson, "position");
+	// 	get_position(t);
+	// 	t = (lwjson_token_t *)lwjson_find(&lwjson, "devicelist");
+	// 	get_type_device(t);
 
-		lwjson_free(&lwjson);
-	}
-	fclose(f);
+	// 	lwjson_free(&lwjson);
+	// }
+	// fclose(f);
 
-	struct tm local_time, utc_time;
+	// struct tm local_time, utc_time;
 
-	time_t t = time(NULL);
-	local_time = *localtime(&t);
-	utc_time = *gmtime(&t);
+	// time_t t = time(NULL);
+	// local_time = *localtime(&t);
+	// utc_time = *gmtime(&t);
 
-	m_time.day = local_time.tm_mday;
-	m_time.hour = local_time.tm_hour;
-	m_time.min = local_time.tm_min;
-	m_time.month = local_time.tm_mon + 1;
-	m_time.sec = local_time.tm_sec;
-	m_time.year = local_time.tm_year - 100;
+	// m_time.day = local_time.tm_mday;
+	// m_time.hour = local_time.tm_hour;
+	// m_time.min = local_time.tm_min;
+	// m_time.month = local_time.tm_mon + 1;
+	// m_time.sec = local_time.tm_sec;
+	// m_time.year = local_time.tm_year - 100;
 
-	Time_Correct(&m_time);
+	// Time_Correct(&m_time);
 
-	m_ini_time.Ver = 0x0100;
-	m_ini_time.Time = CountRTC(&m_time);
-	m_ini_time.TimeZone = local_time.tm_hour - utc_time.tm_hour;
+	// m_ini_time.Ver = 0x0100;
+	// m_ini_time.Time = CountRTC(&m_time);
+	// m_ini_time.TimeZone = local_time.tm_hour - utc_time.tm_hour;
 
-	m_ini_time.crc = usMBCRC16((uint8_t *)&m_ini_time, sizeof(m_ini_time) - sizeof(m_ini_time.crc));
+	// m_ini_time.crc = usMBCRC16((uint8_t *)&m_ini_time, sizeof(m_ini_time) - sizeof(m_ini_time.crc));
 
-	f = fopen((const char *)"initime", (const char *)"w");
-	fwrite((const void *)&m_ini_time, sizeof(m_ini_time), 1, f);
-	fclose(f);
+	// f = fopen((const char *)"initime", (const char *)"w");
+	// fwrite((const void *)&m_ini_time, sizeof(m_ini_time), 1, f);
+	// fclose(f);
 
-	printf("Time: %s\n", ctime(&t));
+	// printf("Time: %s\n", ctime(&t));
 
-	gzip();
+	gzip(argv[1]);
 
 	while (1)
 	{
@@ -551,20 +551,34 @@ int main(void)
 
 uint32_t bw;
 FILE *fil;
+FILE *fil_in;
 
-static void gzip(void)
+// #define FNAME_ENABLE 1
+
+static void gzip(char *arg)
 {
-	const char *data = "I hate Java Programming Language ! \n"
-							 " Because it's way way way way way way way way, very way way way way, super way way way way way way toooooooooooooo verbose.";
-
 	const char *destination_name = "demo.gz";
 
 	struct uzlib_comp comp = {0};
 	unsigned long file_size = 0;
-	size_t len = strlen(data);
+	unsigned int len;
+	unsigned char *source;
 
 	comp.dict_size = 32768;
 	comp.hash_bits = 10;
+
+	fil_in = fopen((const char *)arg, (const char *)"rb");
+
+	fseek(fil_in, 0, SEEK_END);
+	len = ftell(fil_in);
+	fseek(fil_in, 0, SEEK_SET);
+
+	source = (unsigned char *)malloc(len);
+	memset(source, 0, len);
+	if (fread(source, len, 1, fil_in) != len)
+		printf("error read");
+
+	fclose(fil_in);
 
 	size_t hash_size = sizeof(uzlib_hash_entry_t) * (1 << comp.hash_bits);
 	comp.hash_table = (uzlib_hash_entry_t *)malloc(hash_size);
@@ -578,16 +592,13 @@ static void gzip(void)
 	memset(comp.hash_table, 0, hash_size);
 
 	zlib_start_block(&comp);
-	uzlib_compress(&comp, (const unsigned char *)data, len);
+	uzlib_compress(&comp, source, len);
 	zlib_finish_block(&comp);
 
-	printf("\n Data : %s  \n ( %lu  bytes ) \n", data, (uint32_t)strlen(data));
+	printf("Data size %d", len);
 	printf("\n Compressed data to : to %u  bytes \n", comp.outlen);
 
-	// fres = fopen(&fil, destination_name,
-	// 				 FA_WRITE | FA_OPEN_ALWAYS | FA_CREATE_ALWAYS);
-
-	fil = fopen(destination_name, (const char *)"w");
+	fil = fopen(destination_name, (const char *)"wb");
 
 	// if (fres == FR_OK)
 	{
@@ -610,23 +621,28 @@ static void gzip(void)
 
 #ifdef FNAME_ENABLE
 		// Create Payload
-		const char *orginal_name = "demo.txt";
-		fres = fwrite(&fil, orginal_name, strlen(orginal_name), &bw);
-		fputc(0x00, &fil); //	EOF
+		// const char *orginal_name = "demo.txt";
+		const char *orginal_name = FILE_JSON;
+		// fres = fwrite(&fil, orginal_name, strlen(orginal_name), &bw);
+		fwrite(orginal_name, strlen(orginal_name), 1, fil);
+		fputc(0x00, fil); //	EOF
 #endif
 
 		// fres = fwrite(&fil, comp.outbuf, comp.outlen, &bw);
 		fwrite(comp.outbuf, comp.outlen, 1, fil);
-		uint32_t crc = ~uzlib_crc32(data, len, ~0); // Calculate CRC
+		// uint32_t crc = ~uzlib_crc32(data, len, ~0); // Calculate CRC
+		uint32_t crc = ~uzlib_crc32(source, len, ~0); // Calculate CRC
 
 		// fres = fwrite(&fil, &crc, sizeof(crc), &bw); // Add CRC
 		fwrite(&crc, sizeof(crc), 1, fil);
 		// fres = fwrite(&fil, &len, sizeof(len), &bw); // Add original length
 		fwrite(&len, sizeof(len), 1, fil);
+		// fwrite(&fil_in->_cnt, sizeof(fil_in->_cnt), 1, fil);
 
 		// Close file
 		// file_size = fsize(&fil);
 		fclose(fil);
+		// fclose(fil_in);
 	}
 
 	printf("\n Successfully generated!  %s ( %u bytes ) \n", destination_name, file_size);
