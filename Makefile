@@ -12,6 +12,13 @@ SOURC += \
 	src/modbusCrc.c \
 	lwjson/src/lwjson/lwjson.c \
 	lwjson/src/lwjson/lwjson_debug.c \
+	uzlib/adler32.c \
+	uzlib/crc32.c \
+	uzlib/defl_static.c \
+	uzlib/genlz77.c \
+	uzlib/tinfgzip.c \
+	uzlib/tinflate.c \
+	uzlib/tinfzlib.c \
 
 RESURSES += \
 	src/icon.rc \

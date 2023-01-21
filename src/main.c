@@ -6,6 +6,8 @@
 
 #include "lwjson/lwjson.h"
 
+static void gzip(void);
+
 static lwjson_token_t token[200];
 static lwjson_t lwjson;
 
@@ -452,7 +454,7 @@ void Time_Correct(TIME *pTime)
 	{
 		int ThisMonthDays = MonthDays[pTime->month - 1];
 		if (pTime->month == 2 && IsLeapYear(pTime->year))
-			ThisMonthDays += 1; //фефраль в високосный год
+			ThisMonthDays += 1; // фефраль в високосный год
 		if (pTime->day > ThisMonthDays)
 			pTime->day = ThisMonthDays;
 	}
@@ -534,6 +536,8 @@ int main(void)
 
 	printf("Time: %s\n", ctime(&t));
 
+	gzip();
+
 	while (1)
 	{
 		if ('\n' == getc(stdin))
@@ -541,4 +545,89 @@ int main(void)
 			break;
 		}
 	}
+}
+
+#include "../uzlib/uzlib.h"
+
+uint32_t bw;
+FILE *fil;
+
+static void gzip(void)
+{
+	const char *data = "I hate Java Programming Language ! \n"
+							 " Because it's way way way way way way way way, very way way way way, super way way way way way way toooooooooooooo verbose.";
+
+	const char *destination_name = "demo.gz";
+
+	struct uzlib_comp comp = {0};
+	unsigned long file_size = 0;
+	size_t len = strlen(data);
+
+	comp.dict_size = 32768;
+	comp.hash_bits = 10;
+
+	size_t hash_size = sizeof(uzlib_hash_entry_t) * (1 << comp.hash_bits);
+	comp.hash_table = (uzlib_hash_entry_t *)malloc(hash_size);
+
+	if (comp.hash_table == NULL)
+	{
+		printf("\n Memory allocation error \n");
+		return;
+	}
+
+	memset(comp.hash_table, 0, hash_size);
+
+	zlib_start_block(&comp);
+	uzlib_compress(&comp, (const unsigned char *)data, len);
+	zlib_finish_block(&comp);
+
+	printf("\n Data : %s  \n ( %lu  bytes ) \n", data, (uint32_t)strlen(data));
+	printf("\n Compressed data to : to %u  bytes \n", comp.outlen);
+
+	// fres = fopen(&fil, destination_name,
+	// 				 FA_WRITE | FA_OPEN_ALWAYS | FA_CREATE_ALWAYS);
+
+	fil = fopen(destination_name, (const char *)"w");
+
+	// if (fres == FR_OK)
+	{
+
+		// Create File Header
+		uint32_t mtime = 720489600; // 	Initial release GZIP 31 October 1992;
+
+		fputc(0x1f, fil); //	Magic Number
+		fputc(0x8b, fil); //	Magic Number
+		fputc(0x08, fil); //	Compression Method
+#ifdef FNAME_ENABLE
+		fputc(0x08, fil); //	File Flags  FNAME : 0x08 ->	The file contains an original file name string
+#else
+		fputc(0x00, fil); //	File Flags
+#endif
+		// fres = fwrite(&fil, &mtime, sizeof(mtime), &bw); // Set File timestamp
+		fwrite(&mtime, sizeof(mtime), 1, fil);
+		fputc(0x04, fil); //	XFL
+		fputc(0x03, fil); //	OS
+
+#ifdef FNAME_ENABLE
+		// Create Payload
+		const char *orginal_name = "demo.txt";
+		fres = fwrite(&fil, orginal_name, strlen(orginal_name), &bw);
+		fputc(0x00, &fil); //	EOF
+#endif
+
+		// fres = fwrite(&fil, comp.outbuf, comp.outlen, &bw);
+		fwrite(comp.outbuf, comp.outlen, 1, fil);
+		uint32_t crc = ~uzlib_crc32(data, len, ~0); // Calculate CRC
+
+		// fres = fwrite(&fil, &crc, sizeof(crc), &bw); // Add CRC
+		fwrite(&crc, sizeof(crc), 1, fil);
+		// fres = fwrite(&fil, &len, sizeof(len), &bw); // Add original length
+		fwrite(&len, sizeof(len), 1, fil);
+
+		// Close file
+		// file_size = fsize(&fil);
+		fclose(fil);
+	}
+
+	printf("\n Successfully generated!  %s ( %u bytes ) \n", destination_name, file_size);
 }
