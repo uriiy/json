@@ -1,4 +1,4 @@
-TARGET = Srevice
+TARGET = make_bl_cfg
 
 BUILD_DIR = build
 
@@ -19,6 +19,7 @@ SOURC += \
 	uzlib/tinfgzip.c \
 	uzlib/tinflate.c \
 	uzlib/tinfzlib.c \
+	src/bl_cfg.c \
 
 RESURSES += \
 	src/icon.rc \

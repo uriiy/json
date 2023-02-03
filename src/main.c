@@ -3,13 +3,42 @@
 #include <string.h>
 #include <time.h>
 #include "main.h"
+#include "bl_cfg.h"
 
 static void gzip(char *arg);
 
+static char name[] = "1_23-0.1-27.dat";
+static uint8_t nsize = 0, tfsize = 0;
+
+uint8_t find_char(char *name, uint8_t *ret_nsize, uint8_t *ret_tfsize)
+{
+	if (name == NULL ||
+		 ret_nsize == NULL ||
+		 ret_tfsize == NULL)
+	{
+		printf("error pointer");
+		return 0;
+	}
+
+	*ret_nsize = strlen(name);
+
+	do
+	{
+		if (*(char *)(name + *ret_nsize) == 0x2e)
+			break;
+	} while ((*ret_nsize)--);
+
+	// ret_ftype = (char *)(name + (*ret_nsize) + 1);
+	*ret_tfsize = strlen(name + (*ret_nsize) + 1);
+	return 1;
+}
+
 int main(int argc, char *argv[])
 {
-	gzip(argv[1]);
 
+	BLCfg_Save(argv[1]);
+
+	printf("enter to exit\n");
 	while (1)
 	{
 		if ('\n' == getc(stdin))
