@@ -4,6 +4,7 @@
 #include <time.h>
 #include "main.h"
 #include "bl_cfg.h"
+#include "umt.h"
 
 static void gzip(char *arg);
 
@@ -36,7 +37,8 @@ uint8_t find_char(char *name, uint8_t *ret_nsize, uint8_t *ret_tfsize)
 int main(int argc, char *argv[])
 {
 
-	BLCfg_Save(argv[1]);
+	// BLCfg_Save(argv[1]);
+	read_file(argv[1]);
 
 	printf("enter to exit\n");
 	while (1)

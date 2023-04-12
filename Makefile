@@ -20,6 +20,7 @@ SOURC += \
 	uzlib/tinflate.c \
 	uzlib/tinfzlib.c \
 	src/bl_cfg.c \
+	src/umt.c \
 
 RESURSES += \
 	src/icon.rc \
