@@ -60,12 +60,14 @@ uint8_t BLCfg_Save(char *arg)
 	dBL_Storage.mBLParam.mBLConfig.AppSize = len;
 	dBL_Storage.mBLParam.mBLConfig.AppCrc = usMBCRC16((uint8_t *)source, len);
 
-	fil_in = fopen((const char *)Default_OutName, (const char *)"w");
+	fil_in = fopen((const char *)Default_OutName, (const char *)"wb");
 
 	fwrite(&dBL_Storage, sizeof(BL_Storage), 1, fil_in);
 
 	new_hdr.mGeneration = 1;
 	new_hdr.mCRC = crc32_compute((uint8_t const *)&dBL_Storage, sizeof(BL_Storage), NULL);
+	printf("mGeneration=0x%x, mCRC=0x%x\n", new_hdr.mGeneration,
+			 new_hdr.mCRC);
 
 	printf("LEN=%d, CRC=0x%x\n", dBL_Storage.mBLParam.mBLConfig.AppSize,
 			 dBL_Storage.mBLParam.mBLConfig.AppCrc);
