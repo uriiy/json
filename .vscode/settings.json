@@ -18,4 +18,5 @@
 	"editor.detectIndentation": false,
 	"editor.formatOnSave": true,
 	"editor.renderWhitespace": "all",
+	"cSpell.enabled": false
 }

@@ -4,32 +4,42 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "spsk.h"
+
 UMT_DATA mUMT_DATA;
+SPSK_FILE_V1_2 mSPSK_DATA;
 
 void read_file(char *arg)
 {
 	FILE *fil_in, *fil_in2;
 	size_t size;
+	uint16_t crc = 0;
 	uint32_t old_time = 0;
-	fil_in = fopen((const char *)arg, (const char *)"rb");
+	fil_in = fopen((const char *)arg, (const char *)"r+");
 	printf("Open file: %s\n", arg);
 
-	size = fread(&mUMT_DATA.header, 1, sizeof(mUMT_DATA.header), fil_in);
-	if (size == sizeof(mUMT_DATA.header))
+	size = fread(&mSPSK_DATA, 1, sizeof(mSPSK_DATA), fil_in);
+	if (size == sizeof(mSPSK_DATA))
 		printf("Read Header OK\n");
 	else
 	{
 		printf("Read Header Err\n");
 		return;
 	}
-	printf("%s\n", mUMT_DATA.header.FileDescription);
 
-	size = fread(&mUMT_DATA.data, numdata, sizeof(OMEGA_DATA_FILE_V1_1), fil_in);
+	printf("Enter sensor number: ");
+	scanf("%d", &mSPSK_DATA.Sensor[0].FixNum);
 
-	for (size_t i = 0; i < numdata; i++)
+	uint32_t offset = offsetof(SPSK_FILE_V1_2, Sensor[0].FixNum);
+	fseek(fil_in, offset, 0);
+
+	size = fwrite(&mSPSK_DATA.Sensor[0].FixNum, 1, sizeof(uint32_t), fil_in);
+	if (size == sizeof(uint32_t))
+		printf("Write Header OK\n");
+	else
 	{
-		printf("%d) Time %d (%d)\n", i + 1, mUMT_DATA.data[i].Time, mUMT_DATA.data[i].Time - old_time);
-		old_time = mUMT_DATA.data[i].Time;
+		printf("Write Header Err\n");
+		return;
 	}
 
 	fclose(fil_in);

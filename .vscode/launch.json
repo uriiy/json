@@ -8,7 +8,7 @@
 			"name": "(gdb) Запустить",
 			"type": "cppdbg",
 			"request": "launch",
-			"program": "${workspaceFolder}/Srevice.exe",
+			"program": "${workspaceFolder}/change_spsk_num.exe",
 			"args": [],
 			"stopAtEntry": false,
 			"cwd": "${fileDirname}",

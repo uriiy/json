@@ -1,4 +1,4 @@
-TARGET = make_bl_cfg
+TARGET = change_spsk_num
 
 BUILD_DIR = build
 
